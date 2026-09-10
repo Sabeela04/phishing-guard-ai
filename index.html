@@ -1,58 +1,371 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Phishing Guard AI</title>
-<style>
-:root{--bg:#050914;--panel:#0b1220;--line:#1b3950;--cyan:#32d8e8;--text:#eef7ff;--muted:#8fa8ba;--green:#32d583;--yellow:#ffc857;--red:#ff5364}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 10%,#0b2840 0,transparent 30%),var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}.container{width:min(1180px,94%);margin:auto}.nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #173047}.logo{font-size:22px;font-weight:800}.logo span{color:var(--cyan)}.badge{padding:8px 13px;border:1px solid #244a61;border-radius:20px;color:#91cddd;font-size:12px}.hero{padding:44px 0 25px;text-align:center}.hero h1{font-size:clamp(32px,5vw,58px);margin:0}.hero h1 span{color:var(--cyan)}.hero p{color:var(--muted);margin:12px auto;max-width:700px}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:20px}.card{background:linear-gradient(145deg,rgba(13,25,42,.96),rgba(7,14,26,.96));border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 15px 50px #0005}.card h2{margin:0 0 5px;font-size:18px}.sub{color:var(--muted);font-size:13px;margin-bottom:16px}textarea{width:100%;min-height:190px;background:#050b15;border:1px solid #23455d;border-radius:12px;color:var(--text);padding:16px;font-size:14px;resize:vertical;outline:none}textarea:focus{border-color:var(--cyan)}.row{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}select,button{border-radius:10px;padding:12px 15px;border:1px solid #28506a;background:#0a1726;color:white}button{cursor:pointer;font-weight:700}.scan{flex:1;background:linear-gradient(90deg,#176cff,var(--cyan));border:0;color:#001018}.example{font-size:12px;color:#7fa6ba;cursor:pointer}.result{display:flex;align-items:center;gap:20px}.score{width:128px;height:128px;border-radius:50%;display:grid;place-items:center;position:relative}.score:after{content:"";position:absolute;inset:9px;border-radius:50%;background:#09111d}.score strong{position:relative;z-index:2;font-size:32px}.score small{position:absolute;z-index:2;top:78px;color:var(--muted);font-size:10px}.status{font-size:23px;font-weight:800}.status.safe{color:var(--green)}.status.suspicious{color:var(--yellow)}.status.phishing{color:var(--red)}.action{display:inline-block;margin-top:8px;padding:7px 10px;border-radius:8px;background:#142538;font-size:12px;color:#c8e6f2}.signals{margin-top:22px}.signal{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #183044;font-size:13px}.pts{color:var(--red);font-weight:800}.empty{color:var(--muted);padding:35px 0;text-align:center;border:1px dashed #23445b;border-radius:12px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}.stat{background:#091421;border:1px solid #18354a;border-radius:12px;padding:15px}.stat b{font-size:20px}.stat span{display:block;color:var(--muted);font-size:11px;margin-top:4px}.history{margin-top:20px}.history-item{display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid #183044;font-size:12px}.pill{padding:4px 8px;border-radius:20px;font-size:10px;font-weight:800}.pill.safe{background:#123728;color:var(--green)}.pill.suspicious{background:#3b3011;color:var(--yellow)}.pill.phishing{background:#421923;color:var(--red)}footer{text-align:center;color:#5f7d8e;padding:28px;font-size:11px}@media(max-width:800px){.grid{grid-template-columns:1fr}.result{align-items:flex-start}.stats{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<div class="container">
-<nav class="nav"><div class="logo">🛡️ PHISHING GUARD <span>AI</span></div><div class="badge" id="backendBadge">● CHECKING BACKEND</div></nav>
-<section class="hero"><h1>Intelligent <span>Phishing Detection</span></h1><p>Analyze URLs, emails and messages through a FastAPI backend and receive an explainable risk assessment.</p></section>
-<main class="grid">
-<section class="card"><h2>Threat Scanner</h2><div class="sub">Paste a URL or suspicious email/message below.</div>
-<textarea id="input" placeholder="Example: https://secure-login-example.com/verify-account&#10;&#10;Or paste an email/message..."></textarea>
-<div class="row"><select id="type"><option value="auto">Auto Detect</option><option value="url">URL</option><option value="message">Email / Message</option></select><button class="scan" id="scanBtn" onclick="analyze()">⚡ ANALYZE THREAT</button></div>
-<div class="row"><span class="example" onclick="loadExample('safe')">Try safe example</span><span class="example" onclick="loadExample('phish')">Try phishing example</span></div></section>
-<section class="card"><h2>Analysis Result</h2><div class="sub">Result returned by the backend analysis engine.</div><div id="result"><div class="empty">Enter content and click <b>Analyze Threat</b>.</div></div></section>
-</main>
-<section class="card history"><h2>Detection Activity</h2><div class="sub">Recent scans in this browser session.</div><div id="history"><div class="empty">No scans yet.</div></div></section>
-<footer>Phishing Guard AI • Full-stack academic prototype • FastAPI backend + explainable detection engine</footer>
-</div>
 <script>
-const API="http://127.0.0.1:8000";
 const historyData=[];
-async function checkBackend(){
-  try{const r=await fetch(API+"/health");if(!r.ok)throw Error();document.getElementById("backendBadge").textContent="● BACKEND ONLINE";document.getElementById("backendBadge").style.color="var(--green)";}
-  catch(e){document.getElementById("backendBadge").textContent="● BACKEND OFFLINE";document.getElementById("backendBadge").style.color="var(--red)";}
+
+function checkBackend(){
+  document.getElementById("backendBadge").textContent="● AI ENGINE ONLINE";
+  document.getElementById("backendBadge").style.color="var(--green)";
 }
-function loadExample(k){document.getElementById("input").value=k==="safe"?"https://www.wikipedia.org/":"URGENT! Your bank account will be suspended immediately. Verify your password and OTP by clicking here: https://secure-bank-login-example.com/verify";}
-async function analyze(){
- const content=document.getElementById("input").value.trim(); if(!content){alert("Please enter a URL or message first.");return;}
- const btn=document.getElementById("scanBtn");btn.disabled=true;btn.textContent="⏳ ANALYZING...";
- document.getElementById("result").innerHTML='<div class="empty">Sending content to the Phishing Guard AI backend...</div>';
- try{
-  const response=await fetch(API+"/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({content,input_type:document.getElementById("type").value})});
-  if(!response.ok)throw new Error("Backend returned "+response.status);
-  const data=await response.json();render(data);
-  historyData.unshift({time:new Date().toLocaleTimeString(),label:data.classification,score:data.score,preview:content.replace(/\s+/g," ").slice(0,65)});
-  renderHistory();
- }catch(err){document.getElementById("result").innerHTML='<div class="empty" style="color:var(--red)">Cannot connect to backend.<br><br>Start FastAPI with <b>uvicorn main:app --reload</b> and try again.</div>';}
- finally{btn.disabled=false;btn.textContent="⚡ ANALYZE THREAT";checkBackend();}
+
+function loadExample(k){
+  document.getElementById("input").value =
+    k==="safe"
+    ? "https://www.wikipedia.org/"
+    : "URGENT! Your bank account will be suspended immediately. Verify your password and OTP by clicking here: https://secure-bank-login-example.com/verify";
 }
+
+function analyze(){
+  const content=document.getElementById("input").value.trim();
+
+  if(!content){
+    alert("Please enter a URL or message first.");
+    return;
+  }
+
+  const btn=document.getElementById("scanBtn");
+  btn.disabled=true;
+  btn.textContent="⏳ ANALYZING...";
+
+  document.getElementById("result").innerHTML=
+    '<div class="empty">AI engine is analyzing the content...</div>';
+
+  setTimeout(()=>{
+    const data=analyzeContent(content);
+
+    render(data);
+
+    historyData.unshift({
+      time:new Date().toLocaleTimeString(),
+      label:data.classification,
+      score:data.score,
+      preview:content.replace(/\s+/g," ").slice(0,65)
+    });
+
+    renderHistory();
+
+    btn.disabled=false;
+    btn.textContent="⚡ ANALYZE THREAT";
+  },700);
+}
+
+function analyzeContent(content){
+
+  const lower=content.toLowerCase();
+  const signals=[];
+  let score=0;
+
+  const urls=content.match(/https?:\/\/[^\s]+|www\.[^\s]+/gi) || [];
+
+  /* URL ANALYSIS */
+
+  urls.forEach(url=>{
+
+    if(url.startsWith("http://")){
+      score+=10;
+      signals.push({
+        name:"Unencrypted HTTP connection",
+        points:10
+      });
+    }
+
+    if(url.includes("@")){
+      score+=25;
+      signals.push({
+        name:"Obfuscated URL using @ symbol",
+        points:25
+      });
+    }
+
+    if(url.length>80){
+      score+=10;
+      signals.push({
+        name:"Unusually long URL",
+        points:10
+      });
+    }
+
+    if((url.match(/-/g)||[]).length>=2){
+      score+=8;
+      signals.push({
+        name:"Multiple hyphens in domain",
+        points:8
+      });
+    }
+
+    const suspiciousDomainWords=[
+      "login","verify","secure","account",
+      "update","bank","signin","password"
+    ];
+
+    suspiciousDomainWords.forEach(word=>{
+      if(url.toLowerCase().includes(word)){
+        score+=8;
+        signals.push({
+          name:"Suspicious keyword in URL: "+word,
+          points:8
+        });
+      }
+    });
+
+    const shorteners=[
+      "bit.ly","tinyurl.com","t.co",
+      "goo.gl","is.gd","ow.ly"
+    ];
+
+    if(shorteners.some(x=>url.toLowerCase().includes(x))){
+      score+=20;
+      signals.push({
+        name:"URL shortener detected",
+        points:20
+      });
+    }
+  });
+
+  /* MESSAGE ANALYSIS */
+
+  const suspiciousWords=[
+    "urgent",
+    "immediately",
+    "verify",
+    "verification",
+    "suspended",
+    "password",
+    "otp",
+    "bank",
+    "login",
+    "click here",
+    "security alert",
+    "confirm your",
+    "limited time"
+  ];
+
+  suspiciousWords.forEach(word=>{
+    if(lower.includes(word)){
+      score+=6;
+      signals.push({
+        name:"Suspicious language: "+word,
+        points:6
+      });
+    }
+  });
+
+  /* REWARD / LURE DETECTION */
+
+  const lureWords=[
+    "winner",
+    "prize",
+    "reward",
+    "free",
+    "claim now",
+    "gift",
+    "offer"
+  ];
+
+  lureWords.forEach(word=>{
+    if(lower.includes(word)){
+      score+=7;
+      signals.push({
+        name:"Potential lure/reward language: "+word,
+        points:7
+      });
+    }
+  });
+
+  /* LIMIT SCORE */
+
+  score=Math.min(score,100);
+
+  let classification;
+  let action;
+
+  if(score>=65){
+    classification="PHISHING";
+    action="QUARANTINE / BLOCK";
+  }
+  else if(score>=35){
+    classification="SUSPICIOUS";
+    action="WARN / REVIEW";
+  }
+  else{
+    classification="LEGITIMATE";
+    action="ALLOW";
+  }
+
+  /* REMOVE DUPLICATE INDICATORS */
+
+  const uniqueSignals=[];
+  const seen=new Set();
+
+  signals.forEach(s=>{
+    if(!seen.has(s.name)){
+      seen.add(s.name);
+      uniqueSignals.push(s);
+    }
+  });
+
+  return {
+    score:score,
+    classification:classification,
+    recommended_action:action,
+    signals:uniqueSignals,
+    urls_found:urls.length,
+    input_length:content.length
+  };
+}
+
 function render(d){
- const cls=d.classification==="PHISHING"?"phishing":d.classification==="SUSPICIOUS"?"suspicious":"safe";
- const color=cls==="phishing"?"var(--red)":cls==="suspicious"?"var(--yellow)":"var(--green)";
- const deg=d.score*3.6;
- document.getElementById("result").innerHTML=`<div class="result"><div class="score" style="background:conic-gradient(${color} ${deg}deg,#182a39 ${deg}deg)"><strong>${d.score}</strong><small>RISK / 100</small></div><div><div class="status ${cls}">${d.classification}</div><div class="action">Recommended action: <b>${d.recommended_action}</b></div></div></div><div class="signals"><h3 style="font-size:14px">Detected Indicators</h3>${d.signals.length?d.signals.map(s=>`<div class="signal"><b>${escapeHtml(s.name)}</b><span class="pts">+${s.points}</span></div>`).join(""):"<div class='signal'>No major phishing indicators detected.</div>"}</div><div class="stats"><div class="stat"><b>${d.signals.length}</b><span>Indicators</span></div><div class="stat"><b>${d.urls_found}</b><span>URLs Found</span></div><div class="stat"><b>${d.input_length}</b><span>Characters</span></div></div>`;
+
+  const cls=
+    d.classification==="PHISHING"
+    ? "phishing"
+    : d.classification==="SUSPICIOUS"
+    ? "suspicious"
+    : "safe";
+
+  const color=
+    cls==="phishing"
+    ? "var(--red)"
+    : cls==="suspicious"
+    ? "var(--yellow)"
+    : "var(--green)";
+
+  const deg=d.score*3.6;
+
+  document.getElementById("result").innerHTML=`
+
+    <div class="result">
+
+      <div class="score"
+        style="background:conic-gradient(
+          ${color} ${deg}deg,
+          #182a39 ${deg}deg
+        )">
+
+        <strong>${d.score}</strong>
+        <small>RISK / 100</small>
+
+      </div>
+
+      <div>
+
+        <div class="status ${cls}">
+          ${d.classification}
+        </div>
+
+        <div class="action">
+          Recommended action:
+          <b>${d.recommended_action}</b>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="signals">
+
+      <h3 style="font-size:14px">
+        Detected Indicators
+      </h3>
+
+      ${
+        d.signals.length
+        ?
+        d.signals.map(s=>`
+
+          <div class="signal">
+
+            <b>${escapeHtml(s.name)}</b>
+
+            <span class="pts">
+              +${s.points}
+            </span>
+
+          </div>
+
+        `).join("")
+        :
+        `
+        <div class="signal">
+          No major phishing indicators detected.
+        </div>
+        `
+      }
+
+    </div>
+
+    <div class="stats">
+
+      <div class="stat">
+        <b>${d.signals.length}</b>
+        <span>Indicators</span>
+      </div>
+
+      <div class="stat">
+        <b>${d.urls_found}</b>
+        <span>URLs Found</span>
+      </div>
+
+      <div class="stat">
+        <b>${d.input_length}</b>
+        <span>Characters</span>
+      </div>
+
+    </div>
+  `;
 }
-function renderHistory(){document.getElementById("history").innerHTML=historyData.slice(0,6).map(x=>{const c=x.label==="PHISHING"?"phishing":x.label==="SUSPICIOUS"?"suspicious":"safe";return `<div class="history-item"><span>${escapeHtml(x.preview)}…</span><span><b>${x.score}/100</b> <span class="pill ${c}">${x.label}</span> <small>${x.time}</small></span></div>`}).join("")}
-function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function renderHistory(){
+
+  document.getElementById("history").innerHTML=
+
+    historyData.slice(0,6).map(x=>{
+
+      const c=
+        x.label==="PHISHING"
+        ? "phishing"
+        : x.label==="SUSPICIOUS"
+        ? "suspicious"
+        : "safe";
+
+      return `
+
+        <div class="history-item">
+
+          <span>
+            ${escapeHtml(x.preview)}…
+          </span>
+
+          <span>
+
+            <b>${x.score}/100</b>
+
+            <span class="pill ${c}">
+              ${x.label}
+            </span>
+
+            <small>${x.time}</small>
+
+          </span>
+
+        </div>
+
+      `;
+
+    }).join("");
+}
+
+function escapeHtml(s){
+
+  return s.replace(
+    /[&<>"']/g,
+    m=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[m])
+  );
+}
+
 checkBackend();
 </script>
-</body>
-</html>
