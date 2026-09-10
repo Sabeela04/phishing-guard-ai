@@ -1,887 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phishing Guard AI</title>
+
+<style>
+:root{
+  --bg:#050914;
+  --panel:#0b1220;
+  --line:#1b3950;
+  --cyan:#32d8e8;
+  --text:#eef7ff;
+  --muted:#8fa8ba;
+  --green:#32d583;
+  --yellow:#ffc857;
+  --red:#ff5364
+}
+
+*{
+  box-sizing:border-box
+}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 85% 10%,#0b2840 0,transparent 30%),
+    var(--bg);
+  color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif
+}
+
+.container{
+  width:min(1180px,94%);
+  margin:auto
+}
+
+.nav{
+  height:76px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #173047
+}
+
+.logo{
+  font-size:22px;
+  font-weight:800
+}
+
+.logo span{
+  color:var(--cyan)
+}
+
+.badge{
+  padding:8px 13px;
+  border:1px solid #244a61;
+  border-radius:20px;
+  color:#91cddd;
+  font-size:12px
+}
+
+.hero{
+  padding:44px 0 25px;
+  text-align:center
+}
+
+.hero h1{
+  font-size:clamp(32px,5vw,58px);
+  margin:0
+}
+
+.hero h1 span{
+  color:var(--cyan)
+}
+
+.hero p{
+  color:var(--muted);
+  margin:12px auto;
+  max-width:700px
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  gap:20px
+}
+
+.card{
+  background:
+    linear-gradient(
+      145deg,
+      rgba(13,25,42,.96),
+      rgba(7,14,26,.96)
+    );
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 15px 50px #0005
+}
+
+.card h2{
+  margin:0 0 5px;
+  font-size:18px
+}
+
+.sub{
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:16px
+}
+
+textarea{
+  width:100%;
+  min-height:190px;
+  background:#050b15;
+  border:1px solid #23455d;
+  border-radius:12px;
+  color:var(--text);
+  padding:16px;
+  font-size:14px;
+  resize:vertical;
+  outline:none
+}
+
+textarea:focus{
+  border-color:var(--cyan)
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:13px;
+  flex-wrap:wrap
+}
+
+select,
+button{
+  border-radius:10px;
+  padding:12px 15px;
+  border:1px solid #28506a;
+  background:#0a1726;
+  color:white
+}
+
+button{
+  cursor:pointer;
+  font-weight:700
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed
+}
+
+.scan{
+  flex:1;
+  background:
+    linear-gradient(
+      90deg,
+      #176cff,
+      var(--cyan)
+    );
+  border:0;
+  color:#001018
+}
+
+.example{
+  font-size:12px;
+  color:#7fa6ba;
+  cursor:pointer
+}
+
+.example:hover{
+  color:var(--cyan)
+}
+
+.result{
+  display:flex;
+  align-items:center;
+  gap:20px
+}
+
+.score{
+  width:128px;
+  height:128px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  position:relative;
+  flex-shrink:0
+}
+
+.score:after{
+  content:"";
+  position:absolute;
+  inset:9px;
+  border-radius:50%;
+  background:#09111d
+}
+
+.score strong{
+  position:relative;
+  z-index:2;
+  font-size:32px
+}
+
+.score small{
+  position:absolute;
+  z-index:2;
+  top:78px;
+  color:var(--muted);
+  font-size:10px
+}
+
+.status{
+  font-size:23px;
+  font-weight:800
+}
+
+.status.safe{
+  color:var(--green)
+}
+
+.status.suspicious{
+  color:var(--yellow)
+}
+
+.status.phishing{
+  color:var(--red)
+}
+
+.action{
+  display:inline-block;
+  margin-top:8px;
+  padding:7px 10px;
+  border-radius:8px;
+  background:#142538;
+  font-size:12px;
+  color:#c8e6f2
+}
+
+.signals{
+  margin-top:22px
+}
+
+.signal{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid #183044;
+  font-size:13px
+}
+
+.pts{
+  color:var(--red);
+  font-weight:800
+}
+
+.empty{
+  color:var(--muted);
+  padding:35px 0;
+  text-align:center;
+  border:1px dashed #23445b;
+  border-radius:12px
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:20px
+}
+
+.stat{
+  background:#091421;
+  border:1px solid #18354a;
+  border-radius:12px;
+  padding:15px
+}
+
+.stat b{
+  font-size:20px
+}
+
+.stat span{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  margin-top:4px
+}
+
+.history{
+  margin-top:20px
+}
+
+.history-item{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:13px 0;
+  border-bottom:1px solid #183044;
+  font-size:12px
+}
+
+.pill{
+  padding:4px 8px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:800
+}
+
+.pill.safe{
+  background:#123728;
+  color:var(--green)
+}
+
+.pill.suspicious{
+  background:#3b3011;
+  color:var(--yellow)
+}
+
+.pill.phishing{
+  background:#421923;
+  color:var(--red)
+}
+
+footer{
+  text-align:center;
+  color:#5f7d8e;
+  padding:28px;
+  font-size:11px
+}
+
+@media(max-width:800px){
+  .grid{
+    grid-template-columns:1fr
+  }
+
+  .result{
+    align-items:flex-start
+  }
+
+  .stats{
+    grid-template-columns:1fr
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<nav class="nav">
+  <div class="logo">
+    🛡️ PHISHING GUARD <span>AI</span>
+  </div>
+
+  <div class="badge" id="backendBadge">
+    ● CHECKING BACKEND
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>
+    Intelligent <span>Phishing Detection</span>
+  </h1>
+
+  <p>
+    Analyze URLs, emails and messages through a FastAPI backend and receive an explainable risk assessment.
+  </p>
+</section>
+
+<main class="grid">
+
+<section class="card">
+
+  <h2>Threat Scanner</h2>
+
+  <div class="sub">
+    Paste a URL or suspicious email/message below.
+  </div>
+
+  <textarea
+    id="input"
+    placeholder="Example: https://secure-login-example.com/verify-account
+
+Or paste an email/message..."
+  ></textarea>
+
+  <div class="row">
+
+    <select id="type">
+      <option value="auto">Auto Detect</option>
+      <option value="url">URL</option>
+      <option value="message">Email / Message</option>
+    </select>
+
+    <button
+      class="scan"
+      id="scanBtn"
+      onclick="analyze()"
+    >
+      ⚡ ANALYZE THREAT
+    </button>
+
+  </div>
+
+  <div class="row">
+
+    <span
+      class="example"
+      onclick="loadExample('safe')"
+    >
+      Try safe example
+    </span>
+
+    <span
+      class="example"
+      onclick="loadExample('phish')"
+    >
+      Try phishing example
+    </span>
+
+  </div>
+
+</section>
+
+
+<section class="card">
+
+  <h2>Analysis Result</h2>
+
+  <div class="sub">
+    Result returned by the backend analysis engine.
+  </div>
+
+  <div id="result">
+
+    <div class="empty">
+      Enter content and click
+      <b>Analyze Threat</b>.
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<section class="card history">
+
+  <h2>Detection Activity</h2>
+
+  <div class="sub">
+    Recent scans in this browser session.
+  </div>
+
+  <div id="history">
+
+    <div class="empty">
+      No scans yet.
+    </div>
+
+  </div>
+
+</section>
+
+
+<footer>
+  Phishing Guard AI • Full-stack academic prototype • FastAPI backend + explainable detection engine
+</footer>
+
+</div>
+
+
 <script>
-/* =========================================================
-   PHISHING GUARD AI
-   Client-Side Demonstration Engine
-   ========================================================= */
 
 const historyData = [];
 
 
-/* =========================================================
-   BACKEND STATUS
-   ========================================================= */
+/* BACKEND STATUS */
 
-function checkBackend() {
-    const badge = document.getElementById("backendBadge");
+function checkBackend(){
 
-    if (!badge) return;
+  document.getElementById("backendBadge").textContent =
+    "● AI ENGINE ONLINE";
 
-    badge.textContent = "● AI ENGINE ONLINE";
-    badge.style.color = "var(--green)";
+  document.getElementById("backendBadge").style.color =
+    "var(--green)";
 }
 
 
-/* =========================================================
-   EXAMPLE INPUTS
-   ========================================================= */
+/* EXAMPLES */
 
-function loadExample(type) {
+function loadExample(k){
 
-    const input = document.getElementById("input");
+  document.getElementById("input").value =
+    k === "safe"
+    ?
+    "https://www.wikipedia.org/"
+    :
+    "URGENT! Your bank account will be suspended immediately. Verify your password and OTP by clicking here: https://secure-bank-login-example.com/verify";
 
-    if (!input) return;
-
-    if (type === "safe") {
-
-        input.value = "https://www.wikipedia.org/";
-
-    } else {
-
-        input.value =
-            "URGENT! Your bank account will be suspended immediately. " +
-            "Verify your password and OTP by clicking here: " +
-            "https://secure-bank-login-example.com/verify";
-    }
 }
 
 
-/* =========================================================
-   MAIN ANALYSIS FUNCTION
-   ========================================================= */
+/* MAIN ANALYSIS */
 
-function analyze() {
+function analyze(){
 
-    const input = document.getElementById("input");
-    const result = document.getElementById("result");
-    const button = document.getElementById("scanBtn");
+  const content =
+    document.getElementById("input").value.trim();
 
-    if (!input || !result || !button) {
-        console.error("Required HTML elements are missing.");
-        return;
-    }
+  if(!content){
 
-    const content = input.value.trim();
-
-    if (!content) {
-
-        alert("Please enter a URL or message first.");
-        return;
-    }
-
-
-    /* Disable button while analysing */
-
-    button.disabled = true;
-    button.textContent = "⏳ ANALYZING...";
-
-
-    result.innerHTML =
-        '<div class="empty">AI engine is analyzing the content...</div>';
-
-
-    /* Small delay to make the demo feel like an AI analysis */
-
-    setTimeout(function () {
-
-        try {
-
-            const data = analyzeContent(content);
-
-            render(data);
-
-
-            /* Add scan to history */
-
-            historyData.unshift({
-
-                time: new Date().toLocaleTimeString(),
-
-                label: data.classification,
-
-                score: data.score,
-
-                preview: content
-                    .replace(/\s+/g, " ")
-                    .slice(0, 65)
-
-            });
-
-
-            renderHistory();
-
-
-        } catch (error) {
-
-            console.error("Analysis error:", error);
-
-            result.innerHTML =
-                '<div class="empty" style="color:var(--red)">' +
-                'Unable to analyze the input.' +
-                '</div>';
-        }
-
-
-        button.disabled = false;
-        button.textContent = "⚡ ANALYZE THREAT";
-
-    }, 700);
-}
-
-
-/* =========================================================
-   PHISHING ANALYSIS ENGINE
-   ========================================================= */
-
-function analyzeContent(content) {
-
-    const lower = content.toLowerCase();
-
-    let score = 0;
-
-    const signals = [];
-
-
-    /* -----------------------------------------------------
-       URL EXTRACTION
-       ----------------------------------------------------- */
-
-    const urls =
-        content.match(
-            /https?:\/\/[^\s]+|www\.[^\s]+/gi
-        ) || [];
-
-
-    /* -----------------------------------------------------
-       URL ANALYSIS
-       ----------------------------------------------------- */
-
-    urls.forEach(function (url) {
-
-        const cleanUrl = url.toLowerCase();
-
-
-        /* HTTP */
-
-        if (cleanUrl.startsWith("http://")) {
-
-            score += 10;
-
-            signals.push({
-                name: "Unencrypted HTTP connection",
-                points: 10
-            });
-        }
-
-
-        /* @ symbol */
-
-        if (cleanUrl.includes("@")) {
-
-            score += 25;
-
-            signals.push({
-                name: "Obfuscated URL using @ symbol",
-                points: 25
-            });
-        }
-
-
-        /* Long URL */
-
-        if (url.length > 80) {
-
-            score += 10;
-
-            signals.push({
-                name: "Unusually long URL",
-                points: 10
-            });
-        }
-
-
-        /* Multiple hyphens */
-
-        const hyphenCount =
-            (url.match(/-/g) || []).length;
-
-        if (hyphenCount >= 2) {
-
-            score += 8;
-
-            signals.push({
-                name: "Multiple hyphens in domain",
-                points: 8
-            });
-        }
-
-
-        /* Suspicious URL keywords */
-
-        const suspiciousDomainWords = [
-
-            "login",
-            "verify",
-            "secure",
-            "account",
-            "update",
-            "bank",
-            "signin",
-            "password"
-
-        ];
-
-
-        suspiciousDomainWords.forEach(function (word) {
-
-            if (cleanUrl.includes(word)) {
-
-                score += 8;
-
-                signals.push({
-
-                    name:
-                        "Suspicious keyword in URL: " +
-                        word,
-
-                    points: 8
-
-                });
-            }
-        });
-
-
-        /* URL shorteners */
-
-        const shorteners = [
-
-            "bit.ly",
-            "tinyurl.com",
-            "t.co",
-            "goo.gl",
-            "is.gd",
-            "ow.ly"
-
-        ];
-
-
-        if (
-            shorteners.some(function (shortener) {
-
-                return cleanUrl.includes(shortener);
-
-            })
-        ) {
-
-            score += 20;
-
-            signals.push({
-
-                name: "URL shortener detected",
-
-                points: 20
-
-            });
-        }
-
-
-        /* IP address instead of domain */
-
-        const ipPattern =
-            /https?:\/\/(?:\d{1,3}\.){3}\d{1,3}/i;
-
-        if (ipPattern.test(url)) {
-
-            score += 15;
-
-            signals.push({
-
-                name: "IP address used instead of domain name",
-
-                points: 15
-
-            });
-        }
-
-
-        /* Excessive subdomains */
-
-        const domainPart =
-            url
-                .replace(/^https?:\/\//i, "")
-                .split("/")[0];
-
-        const dotCount =
-            (domainPart.match(/\./g) || []).length;
-
-        if (dotCount >= 3) {
-
-            score += 10;
-
-            signals.push({
-
-                name: "Multiple subdomains detected",
-
-                points: 10
-
-            });
-        }
-
-    });
-
-
-    /* =====================================================
-       MESSAGE ANALYSIS
-       ===================================================== */
-
-    const suspiciousWords = [
-
-        "urgent",
-        "immediately",
-        "verify",
-        "verification",
-        "suspended",
-        "password",
-        "otp",
-        "bank",
-        "login",
-        "click here",
-        "security alert",
-        "confirm your",
-        "limited time",
-        "account will be",
-        "unauthorized",
-        "security warning"
-
-    ];
-
-
-    suspiciousWords.forEach(function (word) {
-
-        if (lower.includes(word)) {
-
-            score += 6;
-
-            signals.push({
-
-                name:
-                    "Suspicious language: " +
-                    word,
-
-                points: 6
-
-            });
-        }
-    });
-
-
-    /* =====================================================
-       REWARD / LURE DETECTION
-       ===================================================== */
-
-    const lureWords = [
-
-        "winner",
-        "prize",
-        "reward",
-        "free",
-        "claim now",
-        "gift",
-        "offer",
-        "congratulations",
-        "cash prize"
-
-    ];
-
-
-    lureWords.forEach(function (word) {
-
-        if (lower.includes(word)) {
-
-            score += 7;
-
-            signals.push({
-
-                name:
-                    "Potential lure/reward language: " +
-                    word,
-
-                points: 7
-
-            });
-        }
-    });
-
-
-    /* =====================================================
-       PERSONAL INFORMATION REQUEST
-       ===================================================== */
-
-    const sensitiveRequests = [
-
-        "enter your password",
-        "provide your password",
-        "enter otp",
-        "share otp",
-        "enter card number",
-        "credit card",
-        "debit card",
-        "bank details",
-        "account details"
-
-    ];
-
-
-    sensitiveRequests.forEach(function (phrase) {
-
-        if (lower.includes(phrase)) {
-
-            score += 12;
-
-            signals.push({
-
-                name:
-                    "Request for sensitive information: " +
-                    phrase,
-
-                points: 12
-
-            });
-        }
-    });
-
-
-    /* =====================================================
-       PRESSURE / FEAR LANGUAGE
-       ===================================================== */
-
-    const pressureWords = [
-
-        "account blocked",
-        "account suspended",
-        "account will be closed",
-        "last warning",
-        "action required",
-        "act now",
-        "respond immediately"
-
-    ];
-
-
-    pressureWords.forEach(function (phrase) {
-
-        if (lower.includes(phrase)) {
-
-            score += 8;
-
-            signals.push({
-
-                name:
-                    "Pressure or fear-based language: " +
-                    phrase,
-
-                points: 8
-
-            });
-        }
-    });
-
-
-    /* =====================================================
-       SCORE LIMIT
-       ===================================================== */
-
-    score = Math.min(score, 100);
-
-
-    /* =====================================================
-       CLASSIFICATION
-       ===================================================== */
-
-    let classification;
-    let action;
-
-
-    if (score >= 65) {
-
-        classification = "PHISHING";
-
-        action = "QUARANTINE / BLOCK";
-
-    } else if (score >= 35) {
-
-        classification = "SUSPICIOUS";
-
-        action = "WARN / REVIEW";
-
-    } else {
-
-        classification = "LEGITIMATE";
-
-        action = "ALLOW";
-    }
-
-
-    /* =====================================================
-       REMOVE DUPLICATE INDICATORS
-       ===================================================== */
-
-    const uniqueSignals = [];
-
-    const seen = new Set();
-
-
-    signals.forEach(function (signal) {
-
-        if (!seen.has(signal.name)) {
-
-            seen.add(signal.name);
-
-            uniqueSignals.push(signal);
-        }
-    });
-
-
-    /* =====================================================
-       RETURN ANALYSIS RESULT
-       ===================================================== */
-
-    return {
-
-        score: score,
-
-        classification: classification,
-
-        recommended_action: action,
-
-        signals: uniqueSignals,
-
-        urls_found: urls.length,
-
-        input_length: content.length
-    };
-}
-
-
-/* =========================================================
-   DISPLAY RESULT
-   ========================================================= */
-
-function render(data) {
-
-    const result = document.getElementById("result");
-
-    if (!result) return;
-
-
-    let className;
-
-    if (data.classification === "PHISHING") {
-
-        className = "phishing";
-
-    } else if (data.classification === "SUSPICIOUS") {
-
-        className = "suspicious";
-
-    } else {
-
-        className = "safe";
-    }
-
-
-    let color;
-
-    if (className === "phishing") {
-
-        color = "var(--red)";
-
-    } else if (className === "suspicious") {
-
-        color = "var(--yellow)";
-
-    } else {
-
-        color = "var(--green)";
-    }
-
-
-    const degrees = data.score * 3.6;
-
-
-    /* Indicator HTML */
-
-    let signalHTML = "";
-
-
-    if (data.signals.length > 0) {
-
-        signalHTML = data.signals.map(function (signal) {
-
-            return `
-
-                <div class="signal">
-
-                    <b>
-                        ${escapeHtml(signal.name)}
-                    </b>
-
-                    <span class="pts">
-                        +${signal.points}
-                    </span>
-
-                </div>
-
-            `;
-
-        }).join("");
-
-    } else {
-
-        signalHTML = `
-
-            <div class="signal">
-
-                No major phishing indicators detected.
-
-            </div>
-
-        `;
-    }
-
-
-    /* Result */
-
-    result.innerHTML = `
-
-        <div class="result">
-
-            <div
-                class="score"
-                style="
-                    background:
-                    conic-gradient(
-                        ${color}
-                        ${degrees}deg,
-                        #182a39
-                        ${degrees}deg
-                    );
-                "
-            >
-
-                <strong>
-                    ${data.score}
-                </strong>
-
-                <small>
-                    RISK / 100
-                </small>
-
-            </div>
-
-
-            <div>
-
-                <div class="status ${className}">
-
-                    ${data.classification}
-
-                </div>
-
-
-                <div class="action">
-
-                    Recommended action:
-
-                    <b>
-                        ${data.recommended_action}
-                    </b>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="signals">
-
-            <h3 style="font-size:14px">
-
-                Detected Indicators
-
-            </h3>
-
-            ${signalHTML}
-
-        </div>
-
-
-        <div class="stats">
-
-            <div class="stat">
-
-                <b>
-                    ${data.signals.length}
-                </b>
-
-                <span>
-                    Indicators
-                </span>
-
-            </div>
-
-
-            <div class="stat">
-
-                <b>
-                    ${data.urls_found}
-                </b>
-
-                <span>
-                    URLs Found
-                </span>
-
-            </div>
-
-
-            <div class="stat">
-
-                <b>
-                    ${data.input_length}
-                </b>
-
-                <span>
-                    Characters
-                </span>
-
-            </div>
-
-        </div>
-
-    `;
-}
-
-
-/* =========================================================
-   DETECTION HISTORY
-   ========================================================= */
-
-function renderHistory() {
-
-    const history = document.getElementById("history");
-
-    if (!history) return;
-
-
-    if (historyData.length === 0) {
-
-        history.innerHTML =
-            '<div class="empty">No scans yet.</div>';
-
-        return;
-    }
-
-
-    history.innerHTML =
-
-        historyData
-            .slice(0, 6)
-            .map(function (item) {
-
-
-                let className;
-
-                if (item.label === "PHISHING") {
-
-                    className = "phishing";
-
-                } else if (item.label === "SUSPICIOUS") {
-
-                    className = "suspicious";
-
-                } else {
-
-                    className = "safe";
-                }
-
-
-                return `
-
-                    <div class="history-item">
-
-                        <span>
-
-                            ${escapeHtml(item.preview)}…
-
-                        </span>
-
-
-                        <span>
-
-                            <b>
-                                ${item.score}/100
-                            </b>
-
-
-                            <span class="pill ${className}">
-
-                                ${item.label}
-
-                            </span>
-
-
-                            <small>
-                                ${item.time}
-                            </small>
-
-                        </span>
-
-                    </div>
-
-                `;
-
-            })
-            .join("");
-}
-
-
-/* =========================================================
-   SECURITY: ESCAPE HTML
-   ========================================================= */
-
-function escapeHtml(text) {
-
-    return String(text).replace(
-
-        /[&<>"']/g,
-
-        function (character) {
-
-            const entities = {
-
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#039;"
-
-            };
-
-            return entities[character];
-        }
+    alert(
+      "Please enter a URL or message first."
     );
-}
+
+    return;
+  }
 
 
-/* =========================================================
-   START APPLICATION
-   ========================================================= */
+  const btn =
+    document.getElementById("scanBtn");
 
-document.addEventListener("DOMContentLoaded", function () {
+  btn.disabled = true;
 
-    checkBackend();
+  btn.textContent =
+    "⏳ ANALYZING...";
+
+
+  document.getElementById("result").innerHTML =
+    '<div class="empty">AI engine is analyzing the content...</div>';
+
+
+  setTimeout(()=>{
+
+    const data =
+      analyzeContent(content);
+
+    render(data);
+
+
+    historyData.unshift({
+
+      time:
+        new Date().toLocaleTimeString(),
+
+      label:
+        data.classification,
+
+      score:
+        data.score,
+
+      preview:
+        content
+        .replace(/\s+/g," ")
+        .slice(0,65)
+
+    });
+
 
     renderHistory();
 
-});
+
+    btn.disabled = false;
+
+    btn.textContent =
+      "⚡ ANALYZE THREAT";
+
+  },700);
+
+}
+
+
+/* PHISHING DETECTION ENGINE */
+
+function analyzeContent(content){
+
+  const lower =
+    content.toLowerCase();
+
+  const signals = [];
+
+  let score = 0;
+
+
+  const urls =
+    content.match(
+      /https?:\/\/[^\s]+|www\.[^\s]+/gi
+    ) || [];
+
+
+  /* URL ANALYSIS */
+
+  urls.forEach(url=>{
+
+
+    /* HTTP */
+
+    if(url.startsWith("http://")){
+
+      score += 10;
+
+      signals.push({
+
+        name:
+          "Unencrypted HTTP connection",
+
+        points:10
+
+      });
+
+    }
+
+
+    /* @ SYMBOL */
+
+    if(url.includes("@")){
+
+      score += 25;
+
+      signals.push({
+
+        name:
+          "Obfuscated URL using @ symbol",
+
+        points:25
+
+      });
+
+    }
+
+
+    /* LONG URL */
+
+    if(url.length > 80){
+
+      score += 10;
+
+      signals.push({
+
+        name:
+          "Unusually long URL",
+
+        points:10
+
+      });
+
+    }
+
+
+    /* HYPHENS */
+
+    if(
+      (url.match(/-/g)||[]).length >= 2
+    ){
+
+      score += 8;
+
+      signals.push({
+
+        name:
+          "Multiple hyphens in domain",
+
+        points:8
+
+      });
+
+    }
+
+
+    /* SUSPICIOUS DOMAIN WORDS */
+
+    const suspiciousDomainWords = [
+
+      "login",
+      "verify",
+      "secure",
+      "account",
+      "update",
+      "bank",
+      "signin",
+      "password"
+
+    ];
+
+
+    suspiciousDomainWords.forEach(word=>{
+
+      if(
+        url.toLowerCase().includes(word)
+      ){
+
+        score += 8;
+
+        signals.push({
+
+          name:
+            "Suspicious keyword in URL: " +
+            word,
+
+          points:8
+
+        });
+
+      }
+
+    });
+
+
+    /* URL SHORTENERS */
+
+    const shorteners = [
+
+      "bit.ly",
+      "tinyurl.com",
+      "t.co",
+      "goo.gl",
+      "is.gd",
+      "ow.ly"
+
+    ];
+
+
+    if(
+      shorteners.some(
+        x => url.toLowerCase().includes(x)
+      )
+    ){
+
+      score += 20;
+
+      signals.push({
+
+        name:
+          "URL shortener detected",
+
+        points:20
+
+      });
+
+    }
+
+  });
+
+
+  /* MESSAGE ANALYSIS */
+
+  const suspiciousWords = [
+
+    "urgent",
+    "immediately",
+    "verify",
+    "verification",
+    "suspended",
+    "password",
+    "otp",
+    "bank",
+    "login",
+    "click here",
+    "security alert",
+    "confirm your",
+    "limited time"
+
+  ];
+
+
+  suspiciousWords.forEach(word=>{
+
+    if(lower.includes(word)){
+
+      score += 6;
+
+      signals.push({
+
+        name:
+          "Suspicious language: " +
+          word,
+
+        points:6
+
+      });
+
+    }
+
+  });
+
+
+  /* REWARD / LURE DETECTION */
+
+  const lureWords = [
+
+    "winner",
+    "prize",
+    "reward",
+    "free",
+    "claim now",
+    "gift",
+    "offer"
+
+  ];
+
+
+  lureWords.forEach(word=>{
+
+    if(lower.includes(word)){
+
+      score += 7;
+
+      signals.push({
+
+        name:
+          "Potential lure/reward language: " +
+          word,
+
+        points:7
+
+      });
+
+    }
+
+  });
+
+
+  /* LIMIT SCORE */
+
+  score =
+    Math.min(score,100);
+
+
+  let classification;
+
+  let action;
+
+
+  /* CLASSIFICATION */
+
+  if(score >= 65){
+
+    classification =
+      "PHISHING";
+
+    action =
+      "QUARANTINE / BLOCK";
+
+  }
+
+  else if(score >= 35){
+
+    classification =
+      "SUSPICIOUS";
+
+    action =
+      "WARN / REVIEW";
+
+  }
+
+  else{
+
+    classification =
+      "LEGITIMATE";
+
+    action =
+      "ALLOW";
+
+  }
+
+
+  /* REMOVE DUPLICATES */
+
+  const uniqueSignals = [];
+
+  const seen = new Set();
+
+
+  signals.forEach(s=>{
+
+    if(!seen.has(s.name)){
+
+      seen.add(s.name);
+
+      uniqueSignals.push(s);
+
+    }
+
+  });
+
+
+  return {
+
+    score:score,
+
+    classification:
+      classification,
+
+    recommended_action:
+      action,
+
+    signals:
+      uniqueSignals,
+
+    urls_found:
+      urls.length,
+
+    input_length:
+      content.length
+
+  };
+
+}
+
+
+/* DISPLAY RESULT */
+
+function render(d){
+
+  const cls =
+    d.classification === "PHISHING"
+    ?
+    "phishing"
+    :
+    d.classification === "SUSPICIOUS"
+    ?
+    "suspicious"
+    :
+    "safe";
+
+
+  const color =
+    cls === "phishing"
+    ?
+    "var(--red)"
+    :
+    cls === "suspicious"
+    ?
+    "var(--yellow)"
+    :
+    "var(--green)";
+
+
+  const deg =
+    d.score * 3.6;
+
+
+  document.getElementById("result").innerHTML = `
+
+    <div class="result">
+
+      <div
+        class="score"
+        style="
+          background:
+          conic-gradient(
+            ${color}
+            ${deg}deg,
+            #182a39
+            ${deg}deg
+          )
+        "
+      >
+
+        <strong>
+          ${d.score}
+        </strong>
+
+        <small>
+          RISK / 100
+        </small>
+
+      </div>
+
+
+      <div>
+
+        <div class="status ${cls}">
+          ${d.classification}
+        </div>
+
+
+        <div class="action">
+
+          Recommended action:
+
+          <b>
+            ${d.recommended_action}
+          </b>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="signals">
+
+      <h3 style="font-size:14px">
+        Detected Indicators
+      </h3>
+
+
+      ${
+        d.signals.length
+
+        ?
+
+        d.signals.map(s=>`
+
+          <div class="signal">
+
+            <b>
+              ${escapeHtml(s.name)}
+            </b>
+
+            <span class="pts">
+              +${s.points}
+            </span>
+
+          </div>
+
+        `).join("")
+
+        :
+
+        `
+
+        <div class="signal">
+
+          No major phishing indicators detected.
+
+        </div>
+
+        `
+      }
+
+    </div>
+
+
+    <div class="stats">
+
+
+      <div class="stat">
+
+        <b>
+          ${d.signals.length}
+        </b>
+
+        <span>
+          Indicators
+        </span>
+
+      </div>
+
+
+      <div class="stat">
+
+        <b>
+          ${d.urls_found}
+        </b>
+
+        <span>
+          URLs Found
+        </span>
+
+      </div>
+
+
+      <div class="stat">
+
+        <b>
+          ${d.input_length}
+        </b>
+
+        <span>
+          Characters
+        </span>
+
+      </div>
+
+
+    </div>
+
+  `;
+
+}
+
+
+/* HISTORY */
+
+function renderHistory(){
+
+  document.getElementById("history").innerHTML =
+
+    historyData
+    .slice(0,6)
+    .map(x=>{
+
+      const c =
+        x.label === "PHISHING"
+        ?
+        "phishing"
+        :
+        x.label === "SUSPICIOUS"
+        ?
+        "suspicious"
+        :
+        "safe";
+
+
+      return `
+
+        <div class="history-item">
+
+          <span>
+
+            ${escapeHtml(x.preview)}…
+
+          </span>
+
+
+          <span>
+
+            <b>
+              ${x.score}/100
+            </b>
+
+
+            <span class="pill ${c}">
+
+              ${x.label}
+
+            </span>
+
+
+            <small>
+              ${x.time}
+            </small>
+
+          </span>
+
+        </div>
+
+      `;
+
+    })
+    .join("");
+
+}
+
+
+/* HTML SECURITY */
+
+function escapeHtml(s){
+
+  return s.replace(
+
+    /[&<>"']/g,
+
+    m => ({
+
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+
+    }[m])
+
+  );
+
+}
+
+
+/* START */
+
+checkBackend();
+
 </script>
+
+</body>
+</html>
